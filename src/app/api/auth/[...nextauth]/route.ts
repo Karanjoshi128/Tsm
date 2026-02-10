@@ -21,14 +21,16 @@ const handler = NextAuth({
       },
 
       async authorize(credentials) {
-       
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
 
+        const email = credentials.email.trim().toLowerCase(); //email normalization done
+        const password = credentials.password;
+
         const user = await prisma.user.findUnique({
           where: {
-            email: credentials.email,
+            email,
           },
         });
 
@@ -36,16 +38,12 @@ const handler = NextAuth({
           return null;
         }
 
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
+        const isPasswordValid = await bcrypt.compare(password, user.password);
 
         if (!isPasswordValid) {
           return null;
         }
 
-        
         return {
           id: user.id,
           email: user.email,
@@ -63,8 +61,9 @@ const handler = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = (user as any).id;
-        token.role = (user as any).role;
+        const u = user as unknown as { id: string; role: string };
+        token.id = u.id;
+        token.role = u.role;
       }
       return token;
     },
@@ -85,4 +84,4 @@ const handler = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
 });
 
-export { handler as GET, handler as POST }
+export { handler as GET, handler as POST };

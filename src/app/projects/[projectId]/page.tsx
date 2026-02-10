@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import ProjectStatusSelect from "./ProjectStatusSelect";
+import TaskDeleteButton from "./TaskDeleteButton";
+import TaskStatusSelect from "./TaskStatusSelect";
 
 interface PageProps {
   params:
@@ -80,17 +83,10 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
                   {project.name}
                 </h1>
-                <span
-                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                    project.status === "ACTIVE"
-                      ? "bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20"
-                      : project.status === "COMPLETED"
-                        ? "bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20"
-                        : "bg-gray-50 text-gray-600 ring-1 ring-inset ring-gray-500/20"
-                  }`}
-                >
-                  {project.status}
-                </span>
+                <ProjectStatusSelect
+                  projectId={project.id}
+                  status={project.status}
+                />
               </div>
               {project.description && (
                 <p className="mt-2 text-sm leading-relaxed text-gray-600">
@@ -201,8 +197,9 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="text-base font-semibold text-gray-900">
-                        {task.title}
+                      <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+                        <span>{task.title}</span>
+                        <TaskDeleteButton taskId={task.id} />
                       </h3>
                       {task.description && (
                         <p className="mt-1.5 text-sm leading-relaxed text-gray-600">
@@ -210,17 +207,9 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                         </p>
                       )}
                     </div>
-                    <span
-                      className={`ml-4 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        task.status === "DONE"
-                          ? "bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20"
-                          : task.status === "IN_PROGRESS"
-                            ? "bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20"
-                            : "bg-gray-50 text-gray-600 ring-1 ring-inset ring-gray-500/20"
-                      }`}
-                    >
-                      {task.status.replace("_", " ")}
-                    </span>
+                    <div className="ml-4">
+                      <TaskStatusSelect taskId={task.id} status={task.status} />
+                    </div>
                   </div>
 
                   <div className="mt-4 flex items-center gap-6 text-xs text-gray-500">

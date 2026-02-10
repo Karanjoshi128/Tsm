@@ -1,28 +1,36 @@
 "use client";
 
-import { signIn } from "next-auth/react";
 import { useState } from "react";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
-    const res = await signIn("credentials", {
-      email: email,
-      password: password,
-      redirect: false,
-      callbackUrl: "/dashboard",
-    });
+    try {
+      const registerRes = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (res?.error) {
-      setError("Invalid credentials");
-    } else {
-      window.location.href = "/dashboard";
+      if (!registerRes.ok) {
+        const data = await registerRes.json().catch(() => null);
+        setError(data?.message ?? "Registration failed");
+        setLoading(false);
+        return;
+      }
+
+      window.location.href = "/login";
+    } catch {
+      setError("Something went wrong. Please try again.");
+      setLoading(false);
     }
   };
 
@@ -34,10 +42,10 @@ export default function LoginPage() {
       >
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
-            Welcome back
+            Create account
           </h1>
           <p className="text-sm text-gray-500">
-            Enter your credentials to continue
+            Enter your details to get started
           </p>
         </div>
 
@@ -49,7 +57,10 @@ export default function LoginPage() {
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium text-gray-700">
+            <label
+              htmlFor="email"
+              className="text-sm font-medium text-gray-700"
+            >
               Email
             </label>
             <input
@@ -60,11 +71,15 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={loading}
             />
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium text-gray-700">
+            <label
+              htmlFor="password"
+              className="text-sm font-medium text-gray-700"
+            >
               Password
             </label>
             <input
@@ -75,15 +90,18 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              disabled={loading}
+              minLength={6}
             />
           </div>
         </div>
 
-        <button 
+        <button
           type="submit"
-          className="w-full rounded-md bg-gray-900 py-2.5 text-sm font-medium text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 transition-colors"
+          disabled={loading}
+          className="w-full rounded-md bg-gray-900 py-2.5 text-sm font-medium text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Sign in
+          {loading ? "Creating..." : "Register"}
         </button>
       </form>
     </main>
