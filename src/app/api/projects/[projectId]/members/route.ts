@@ -4,8 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { projectId: string } }
+  context: { params: Promise<{ projectId: string }> }
 ) {
+  const { projectId } = await context.params;
+
   const token = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
@@ -19,9 +21,7 @@ export async function GET(
   }
 
   const members = await prisma.projectMember.findMany({
-    where: {
-      projectId: params.projectId,
-    },
+    where: { projectId },
     include: {
       user: true,
     },
