@@ -9,10 +9,7 @@ export async function POST(req: NextRequest) {
   });
 
   if (!token || token.role !== "ADMIN") {
-    return NextResponse.json(
-      { message: "Unauthorized" },
-      { status: 401 }
-    );
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   const body = await req.json();
@@ -30,7 +27,24 @@ export async function POST(req: NextRequest) {
   if (!title || !projectId || !assignedToId) {
     return NextResponse.json(
       { message: "Missing required fields" },
-      { status: 400 }
+      { status: 400 },
+    );
+  }
+
+  const isAssigneeMember = await prisma.projectMember.findUnique({
+    where: {
+      userId_projectId: {
+        userId: assignedToId,
+        projectId,
+      },
+    },
+    select: { id: true },
+  });
+
+  if (!isAssigneeMember) {
+    return NextResponse.json(
+      { message: "Assigned user is not a member of this project" },
+      { status: 400 },
     );
   }
 
@@ -56,12 +70,8 @@ export async function GET(req: NextRequest) {
   });
 
   if (!token) {
-    return NextResponse.json(
-      { message: "Unauthorized" },
-      { status: 401 }
-    );
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
-
 
   if (token.role === "ADMIN") {
     const tasks = await prisma.task.findMany({

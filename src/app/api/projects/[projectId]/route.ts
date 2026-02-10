@@ -34,3 +34,33 @@ export async function PATCH(
 
   return NextResponse.json(project);
 }
+
+export async function DELETE(
+  req: NextRequest,
+  context: { params: Promise<{ projectId: string }> },
+) {
+  const { projectId } = await context.params;
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
+
+  if (!token || token.role !== "ADMIN") {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: { id: true },
+  });
+
+  if (!project) {
+    return NextResponse.json({ message: "Project not found" }, { status: 404 });
+  }
+
+  await prisma.task.deleteMany({ where: { projectId } });
+  await prisma.projectMember.deleteMany({ where: { projectId } });
+  await prisma.project.delete({ where: { id: projectId } });
+
+  return NextResponse.json({ message: "Project deleted" }, { status: 200 });
+}

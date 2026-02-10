@@ -1,9 +1,11 @@
 import "./globals.css";
+import SmoothScroll from "./SmoothScroll";
 
 export const metadata = {
   title: "Task Management System",
-  description : "A simple task management system built with Next.js and Tailwind CSS",
-}
+  description:
+    "A simple task management system built with Next.js and Tailwind CSS",
+};
 
 export default function RootLayout({
   children,
@@ -12,9 +14,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className="bg-gray-50 text-gray-900">
-        {children}
+      <body className="bg-gray-50 text-gray-900">
+        <SmoothScroll>{children}</SmoothScroll>
       </body>
     </html>
   );

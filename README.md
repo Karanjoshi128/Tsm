@@ -1,10 +1,10 @@
 # Task Management System (TMS)
 
-A simple Task Management System built with **Next.js (App Router)**, **NextAuth (Credentials)**, **Prisma**, and **SQLite**.
+A simple Task Management System built with **Next.js (App Router)**, **NextAuth (Credentials)**, **Prisma**, and **PostgreSQL**.
 
 ## Live URL
 
-- Live Demo: **(add your deployed URL here)**
+- Live Demo: https://tsm-one.vercel.app/
 
 ## Test Credentials (Seeded)
 
@@ -38,10 +38,15 @@ The seed creates:
 
 - Auth with email/password (NextAuth Credentials)
 - Role-based access control (ADMIN vs MEMBER)
+- Basic animations (GSAP)
+- Smooth scrolling (Lenis)
 - Admin can:
   - View/create projects
+  - Delete projects (with typed confirmation)
   - Update project status (dropdown)
+  - Add users to a project by email
   - Create tasks inside a project
+    - Task assignment is restricted to members of that project
   - Update task status (dropdown)
   - Delete tasks
 - Members can:
@@ -55,7 +60,9 @@ The seed creates:
 - Tailwind CSS
 - NextAuth v4 (JWT sessions)
 - Prisma ORM
-- SQLite
+- PostgreSQL
+- GSAP (basic animations)
+- Lenis (smooth scrolling)
 
 ## Architecture (High Level)
 
@@ -108,8 +115,11 @@ High-signal paths:
 Create a `.env` file in the project root:
 
 ```env
-# SQLite DB
-DATABASE_URL="file:./dev.db"
+# PostgreSQL DB
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DB?sslmode=require"
+
+# Optional (recommended for Prisma migrations on some hosts)
+DIRECT_URL="postgresql://USER:PASSWORD@HOST:PORT/DB?sslmode=require"
 
 # NextAuth
 NEXTAUTH_SECRET="your-secret"
@@ -134,7 +144,7 @@ Steps:
 ```bash
 npm install
 
-# Apply migrations (creates SQLite DB)
+# Apply migrations
 npx prisma migrate dev
 
 # Seed test users/projects/tasks
@@ -165,6 +175,8 @@ Projects (ADMIN via middleware):
 - `POST /api/projects` – Create project
 - `PATCH /api/projects/:projectId` – Update project status
 - `GET /api/projects/:projectId/members` – List project members
+- `POST /api/projects/:projectId/members` – Add a project member by email
+- `DELETE /api/projects/:projectId` – Delete project (also removes tasks/members)
 
 Tasks (auth required via middleware):
 
@@ -172,6 +184,7 @@ Tasks (auth required via middleware):
   - ADMIN: all tasks
   - MEMBER: only their assigned tasks
 - `POST /api/tasks` – Create task (ADMIN only)
+  - The `assignedToId` must be a member of `projectId`
 - `PATCH /api/tasks/:taskId`
   - ADMIN: full update
   - MEMBER: can update only status of their own task
@@ -180,7 +193,6 @@ Tasks (auth required via middleware):
 ## Notes
 
 - The `/` route is a simple landing page.
-- A debug helper endpoint exists: `GET /api/debug/hash` (returns a bcrypt hash for a sample string).
 
 ## Screens / Pages
 

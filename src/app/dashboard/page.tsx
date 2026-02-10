@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Link from "next/link";
+import LogoutButton from "./LogoutButton";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -11,6 +12,27 @@ export default async function DashboardPage() {
   }
 
   const isAdmin = session.user.role === "ADMIN";
+
+  const memberProjects = isAdmin
+    ? []
+    : await prisma.project.findMany({
+        where: {
+          members: {
+            some: {
+              userId: session.user.id,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: {
+          id: true,
+          name: true,
+          status: true,
+          createdAt: true,
+        },
+      });
 
   // Fetch tasks based on role
   const tasks = await prisma.task.findMany({
@@ -39,23 +61,35 @@ export default async function DashboardPage() {
   const projectTaskCount: Record<string, number> = {};
   tasks.forEach((task) => {
     const projectName = task.project.name;
-    projectTaskCount[projectName] =
-      (projectTaskCount[projectName] || 0) + 1;
+    projectTaskCount[projectName] = (projectTaskCount[projectName] || 0) + 1;
   });
 
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-7xl px-6 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
-            Dashboard
-          </h1>
-          <p className="mt-2 text-sm text-gray-500">
-            {isAdmin
-              ? "Overview of all tasks and projects"
-              : "Overview of your assigned tasks"}
-          </p>
+        <div className="mb-8 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+              Dashboard
+            </h1>
+            <p className="mt-2 text-sm text-gray-500">
+              {isAdmin
+                ? "Overview of all tasks and projects"
+                : "Overview of your assigned tasks"}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            {isAdmin && (
+              <Link
+                href="/projects"
+                className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+              >
+                Projects
+              </Link>
+            )}
+            <LogoutButton />
+          </div>
         </div>
 
         {/* Summary Cards */}
@@ -232,8 +266,8 @@ export default async function DashboardPage() {
                                   task.priority === "HIGH"
                                     ? "bg-red-500"
                                     : task.priority === "MEDIUM"
-                                    ? "bg-yellow-500"
-                                    : "bg-green-500"
+                                      ? "bg-yellow-500"
+                                      : "bg-green-500"
                                 }`}
                               />
                               <span className="font-medium">
@@ -246,8 +280,8 @@ export default async function DashboardPage() {
                               task.status === "DONE"
                                 ? "bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20"
                                 : task.status === "IN_PROGRESS"
-                                ? "bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20"
-                                : "bg-gray-50 text-gray-600 ring-1 ring-inset ring-gray-500/20"
+                                  ? "bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20"
+                                  : "bg-gray-50 text-gray-600 ring-1 ring-inset ring-gray-500/20"
                             }`}
                           >
                             {task.status.replace("_", " ")}
@@ -310,9 +344,7 @@ export default async function DashboardPage() {
                               <div
                                 className="h-full bg-gray-900 transition-all"
                                 style={{
-                                  width: `${
-                                    (count / tasks.length) * 100
-                                  }%`,
+                                  width: `${(count / tasks.length) * 100}%`,
                                 }}
                               />
                             </div>
@@ -326,6 +358,62 @@ export default async function DashboardPage() {
                 )}
               </div>
             </div>
+
+            {!isAdmin && (
+              <div className="mt-6 rounded-lg border border-gray-200 bg-white shadow-sm">
+                <div className="border-b border-gray-200 px-6 py-4">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    My Projects
+                  </h2>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Projects you are a member of
+                  </p>
+                </div>
+
+                <div className="p-6">
+                  {memberProjects.length === 0 ? (
+                    <p className="text-sm text-gray-500">
+                      You are not assigned to any projects yet.
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {memberProjects.map((project) => (
+                        <div
+                          key={project.id}
+                          className="flex items-center justify-between rounded-lg border border-gray-200 p-3"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-gray-900">
+                              {project.name}
+                            </p>
+                            <p className="mt-1 text-xs text-gray-500">
+                              Joined{" "}
+                              {project.createdAt.toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })}
+                            </p>
+                          </div>
+
+                          <span
+                            className={`ml-4 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                              project.status === "ACTIVE"
+                                ? "bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20"
+                                : project.status === "COMPLETED"
+                                  ? "bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20"
+                                  : "bg-gray-50 text-gray-600 ring-1 ring-inset ring-gray-500/20"
+                            }`}
+                          >
+                            {project.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Quick Actions - Admin Only */}
             {isAdmin && (

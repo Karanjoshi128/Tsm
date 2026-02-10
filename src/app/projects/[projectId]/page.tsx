@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ProjectStatusSelect from "./ProjectStatusSelect";
+import ProjectDeleteButton from "./ProjectDeleteButton";
+import AddProjectMemberForm from "./AddProjectMemberForm";
 import TaskDeleteButton from "./TaskDeleteButton";
 import TaskStatusSelect from "./TaskStatusSelect";
 
@@ -93,7 +95,21 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                   {project.description}
                 </p>
               )}
+
+              <div className="mt-4">
+                <p className="text-sm font-medium text-gray-900">Add member</p>
+                <p className="mt-1 text-xs text-gray-500">
+                  Admin-only: add an existing user by email
+                </p>
+                <div className="mt-3">
+                  <AddProjectMemberForm projectId={project.id} />
+                </div>
+              </div>
             </div>
+            <ProjectDeleteButton
+              projectId={project.id}
+              projectName={project.name}
+            />
           </div>
 
           {/* Task Statistics */}

@@ -17,15 +17,17 @@ export const authOptions: AuthOptions = {
           return null;
         }
 
+        const email = credentials.email.trim().toLowerCase();
+
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email },
         });
 
         if (!user) return null;
 
         const isValid = await bcrypt.compare(
           credentials.password,
-          user.password
+          user.password,
         );
 
         if (!isValid) return null;
@@ -45,8 +47,9 @@ export const authOptions: AuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = (user as any).id;
-        token.role = (user as any).role;
+        const u = user as unknown as { id: string; role: string };
+        token.id = u.id;
+        token.role = u.role;
       }
       return token;
     },
