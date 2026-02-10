@@ -20,6 +20,14 @@ After running the seed (`npx prisma db seed`):
 - Email: `karan1@gmail.com` … `karan9@gmail.com`
 - Password (all members): `member123`
 
+### Credential Images
+
+![Credentials 1](https://ljsz9ukogn.ufs.sh/f/KX1pzsIV6K2sscMMM06LYAaXF9lqmTu1vOIhj0SCxE7Jfkge)
+
+![Credentials 2](https://ljsz9ukogn.ufs.sh/f/KX1pzsIV6K2swd9wz04bFLtRBSvYXHZVQ3DsiqfjgCOGlpMu)
+
+![Credentials 3](https://ljsz9ukogn.ufs.sh/f/KX1pzsIV6K2snAcDX6md29gHGFSbtQWwBokLjpmUJu0KiM4s)
+
 ## Seeded Data
 
 The seed creates:
