@@ -5,8 +5,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { projectId: string } },
+  context: { params: Promise<{ projectId: string }> },
 ) {
+  const { projectId } = await context.params;
   const token = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
@@ -27,7 +28,7 @@ export async function PATCH(
   }
 
   const project = await prisma.project.update({
-    where: { id: params.projectId },
+    where: { id: projectId },
     data: { status: status as ProjectStatus },
   });
 
